@@ -1,0 +1,25 @@
+# Dockerfile.web
+FROM php:apache
+
+# Install necessary packages
+RUN apt-get update && apt-get install -y \
+    openssh-server \
+    supervisor
+
+# Configure SSH
+RUN mkdir /var/run/sshd
+RUN echo 'root:rootpassword' | chpasswd
+RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+
+# Install necessary PHP extensions
+RUN docker-php-ext-install mysqli pdo pdo_mysql
+
+# Configure supervisord to run both Apache and SSH
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+EXPOSE 80 22
+
+# Set the document root
+WORKDIR /var/www/html
+
+CMD ["/usr/bin/supervisord"]

@@ -1,0 +1,25 @@
+# Dockerfile.wp
+FROM wordpress:php7.4-apache
+
+# Install necessary packages
+RUN apt-get update && apt-get install -y \
+    openssh-server \
+    supervisor
+
+# Configure SSH
+RUN mkdir /var/run/sshd
+RUN echo 'root:rootpassword' | chpasswd
+RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+
+# Configure supervisord to run both Apache and SSH
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+EXPOSE 80 22
+
+# Set environment variables
+ENV WORDPRESS_DB_HOST=db_server
+ENV WORDPRESS_DB_USER=wpuser
+ENV WORDPRESS_DB_PASSWORD=wppassword
+ENV WORDPRESS_DB_NAME=wordpress
+
+CMD ["/usr/bin/supervisord"]

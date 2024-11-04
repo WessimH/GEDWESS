@@ -1,0 +1,25 @@
+# Dockerfile.db
+FROM mysql:latest
+
+# Install necessary packages
+RUN apt-get update && apt-get install -y \
+    openssh-server \
+    supervisor
+
+# Configure SSH
+RUN mkdir /var/run/sshd
+RUN echo 'root:rootpassword' | chpasswd
+RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+
+# Configure supervisord to run both MySQL and SSH
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord_bdd.conf
+
+EXPOSE 3306 22
+
+# Set environment variables for MySQL
+ENV MYSQL_ROOT_PASSWORD=rootpassword
+ENV MYSQL_DATABASE=wordpress
+ENV MYSQL_USER=wpuser
+ENV MYSQL_PASSWORD=wppassword
+
+CMD ["/usr/bin/supervisord"]
